@@ -1,0 +1,218 @@
+ps:
+    gus:
+            snmp:
+                agent:
+                    enable:    "false"
+                    host:    "null"
+                    port:    "0"
+                    instance:    "1"
+                age:
+            app:
+                jmx:
+                    enable:    "false"
+                shutdown:
+                    timeout:    "90s"
+                system:
+                    identifier: "NA1"
+            actors:
+                enabled:
+                    cis:    "true"
+                    crab:
+                        create: "true"
+                        upd: "true"
+                        check:
+                            create: "true"
+                    datamart:
+                        events: "true"
+                        calls: "true"
+                    ufm:
+                        scheduler: "true"
+                        calls: "true"
+                        subscriber:
+                            activity:
+                                request: "true"
+            bus:
+                cis:
+                    accum:
+                        thresholds:
+                            exceeded:
+                                read:
+                                    queue:  "test.cis.queue.read"
+                                    exchange: "ps.na.call"
+                                    routing:
+                                        mask: "ps.chargesdb.event.cis.#"
+                                write:
+                                    queue:  "ps.chargesdb.cis.queue"
+                                    exchange: "ps.chargesdb_cis"
+                                    routing:
+                                        mask: "ps.chargesdb.event.cis.#"
+                crab:
+                    check:
+                        create:
+                            read:
+                                queue:  "ps.chargesdb.crab.queue.check.create"
+                                exchange: "ps.na.call"
+                                routing:
+                                    mask: "ps.chargesdb.event.crab.check.create.#"
+                            write:
+                                exchange: "chdb.nagent.crab"
+                                routing:
+                                    mask: "ps.chargesdb.event.crab.check.create.#"
+                    create:
+                        read:
+                            queue:  "ps.chargesdb.crab.queue.read.create"
+                            exchange: "ps.na.call"
+                            routing:
+                                mask: "ps.chargesdb.event.crab.create.#"
+                        write:
+                            exchange: "chdb.nagent.crab"
+                            routing:
+                                mask: "ps.chargesdb.event.crab.create.#"
+                    upd:
+                        read:
+                            queue:  "ps.chargesdb.crab.queue.update"
+                            exchange: "ps.na.call"
+                            routing:
+                                mask: "ps.chargesdb.event.crab.update.#"
+                        write:
+                            exchange: "chdb.nagent.crab"
+                            routing:
+                                mask: "ps.chargesdb.event.crab.update.#"
+                datamart:
+                    events:
+                        read:
+                            queue:  "test.datamart.queue.read.event"
+                            exchange: "ps.na.event"
+                            routing:
+                                mask: "ps.chargesdb.event.datamart.#"
+                        write:
+                            exchange: "ps.chargesdb.datamart"
+                    calls:
+                        read:
+                            queue:  "test.datamart.queue.read.call"
+                            exchange: "ps.na.call"
+                            routing:
+                                mask: "ps.chargesdb.call.datamart.#"
+                        write:
+                            exchange: "ps.chargesdb.datamart"
+                    call_rollback:
+                        read:
+                            queue:  "test.datamart.queue.read.call_rollback"
+                            exchange: "ps.na.call"
+                            routing:
+                                mask: "ps.na.call_rollback"
+                        write:
+                            exchange: "ps.chargesdb.datamart"
+                    new:
+                        routing:
+                              key:
+                                call: "ps.chargesdb.event.datamart_call.#"
+                                call_rollback:  "ps.chargesdb.event.datamart.call_rollback.#"
+                                adjustment: "ps.chargesdb.event.datamart.adjustment.#"
+                                adjustment_rollback:  "ps.chargesdb.event.datamart.adjustment_rollback.#"
+                                charge: "ps.chargesdb.event.datamart.charge.#"
+                                charge_rollback:  "ps.chargesdb.event.datamart.charge_rollback.#"
+                                payment:  "ps.chargesdb.event.datamart.payment.#"
+                                payment_rollback: "ps.chargesdb.event.datamart.payment_rollback.#"
+                ufm:
+                    filter:
+                        file:
+                            yamlAttribute: "{{base_dir}}/{{app_name}}/conf/filter/filter.groovy"
+                        modification:
+                            interval:
+                                ms: "5000"
+                            lock:
+                                node: "{{znode_path}}/locks/ufm-filter-file-lock"
+                    calls:
+                        read:
+                            queue: "ufm.read.call.queue"
+                            exchange: "ps.na.call"
+                            routing:
+                                mask: "ps.chargesdb.call"
+                            message:
+                                timeout:  "1s"
+                    subscriber:
+                        activity:
+                            request:
+                                read:
+                                    queue:  "chdb.nagent.request"
+                                    exchange: "ps.chdb_na_rep_rf"
+                                    routing:
+                                        mask: "ps.chargesdb.subscriber_activity_request.*"
+                            reply:
+                                write:
+                                    exchange: "ps.chargesdb2ufm"
+                                    routing:
+                                        mask: "ufm.subscriber.activity.reply"
+                            write:
+                                exchange: "ps.chargesdb2ufm"
+                                routing:
+                                    mask: "ufm.subscriber.activity.#"
+                    dbadapter:
+                        request:
+                            exchange: "test_ntf_brt"
+                            routing:
+                                mask: "ps.chargesdb.subscriber_activity_get"
+                            time:
+                                zone: "{{timezone}}"
+                        response:
+                            queue:  "db.adapter.response.queue"
+                            exchange: "chdb.nagent.dbadapter.response"
+                            routing:
+                                mask: "subscriber_activities_resp_queue.1"
+                            message:
+                                timeout:  "1s"
+                provisioning:
+                    cis:
+                        accum:
+                            thresholds:
+                                exceeded: "ps.chargesdb.event.cis.#"
+                    crab:
+                        check:
+                            create: "ps.chargesdb.event.crab.check.create.#"
+                        create: "ps.chargesdb.event.crab.create.#"
+                        update: "ps.chargesdb.event.crab.update.#"
+                    ufm:
+                        subscriber:
+                            activity:
+                                request:  "ps.chargesdb.subscriber_activity_request.*"
+                read:
+                    x:
+                        ttl:
+                            message:  "40000"
+        gus_subs_activation:
+            app:
+                jmx:
+                    enable:    "false"
+            snmp:
+                agent:
+                    enable:    "false"
+                    host:    "null"
+                    port:    "0"
+                    instance:    "1"
+            bus:
+                gus:
+                    read:
+                        routing:
+                            mask:    "ps.sa.calls_inform"
+                        exchange:    "ps.sa.calls_inform.exchange"
+                        queue:    "ps.sa.calls_inform.queue"
+                bis:
+                    read:
+                        routing:
+                            mask:    "ps.first_call_stop"
+                        exchange:    "ps.msg_bis_notify"
+                        queue:    "first_call_stop.#"
+                    write:
+                        exchange:    "ps.msg_gus"
+                        routing:
+                            mask:    "ps.first_call"
+            zk:
+                rabbit:
+                    host:    "{{hostvars.localhost.groups.rabbitmq[0]}}"
+                    port:    "{{rabbit.port}}"
+                    vhost:    "{{rabbit.virtualhost}}"
+                    exchange:    "ps.msg_gus"
+                state:    "ENABLED"
+                sharding:
+                    codes:    ""
